@@ -1,0 +1,15 @@
+# requirements.txt
+fastapi
+uvicorn
+pydantic
+#python-hl7 # HL7 v2 için (şimdilik kalsın, belki ihtiyacımız olur)
+#fhir.resources
+psycopg2-binary
+SQLAlchemy
+jinja2 # Yeni eklendi
+python-multipart # Yeni eklendi, form verileri için
+python-dateutil
+google-generativeai
+python-dotenv
+python-jose
+passlib[bcrypt]

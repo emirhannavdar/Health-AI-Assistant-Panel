@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sağlık AI Asistanı Yönetim Paneli</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background-color: #f4f4f4; color: #333; }
+        h1, h2 { color: #0056b3; }
+        .container { max-width: 1200px; margin: auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #f2f2f2; }
+        .highlight-abnormal { background-color: #ffe0b2; } /* Anormal değerler için sarımsı arka plan */
+        .alert-critical { background-color: #ffcccc; color: #cc0000; font-weight: bold; } /* Kritik değerler için kırmızımsı arka plan */
+        .ai-message { font-style: italic; color: #007bff; margin-top: 5px; }
+        .no-records { text-align: center; color: #777; padding: 20px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Sağlık AI Asistanı Yönetim Paneli</h1>
+
+        <h2>Son Laboratuvar Sonuçları ve AI Analizleri</h2>
+        {% if lab_results %}
+        <table>
+            <thead>
+                <tr>
+                    <th>Hasta ID</th>
+                    <th>Test Adı</th>
+                    <th>Değer</th>
+                    <th>Birim</th>
+                    <th>Test Tarihi</th>
+                    <th>AI Analizi</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for result in lab_results %}
+                <tr class="{% if result.ai_analysis %}
+                    {% if 'üzerinde' in result.ai_analysis.lower() %}alert-critical
+                    {% elif 'altında' in result.ai_analysis.lower() %}highlight-abnormal
+                    {% elif 'enfeksiyon riski var' in result.ai_analysis.lower() %}alert-critical
+                    {% endif %}
+                {% endif %}">
+                    <td>{{ result.patient_id }}</td>
+                    <td>{{ result.display_name }}</td>
+                    <td>{{ result.value }}</td>
+                    <td>{{ result.unit }}</td>
+                    <td>{{ result.effective_date_time.strftime('%Y-%m-%d %H:%M') }}</td>
+                    <td>
+                        {% if result.ai_analysis %}
+                            <div class="ai-message">{{ result.ai_analysis }}</div>
+                        {% else %}
+                            Normal veya analiz edilmedi.
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <p class="no-records">Henüz kaydedilmiş laboratuvar sonucu bulunmamaktadır.</p>
+        {% endif %}
+    </div>
+</body>
+</html>
