@@ -33,6 +33,39 @@ from datetime import datetime
 from services.gemini_ai import ask_gemini
 from models.doctor import Doctor
 
+
+from models.base import SessionLocal
+from models.doctor import Doctor
+from passlib.hash import bcrypt
+
+
+# --- burdan ---
+def create_initial_admin():
+    db = SessionLocal()
+    admin_id = "admin"
+    admin_name = "Admin"
+    admin_password = "admin123"  # Sonra değiştir!
+    admin_role = "admin"
+    if not db.query(Doctor).filter_by(id=admin_id).first():
+        hashed_pw = bcrypt.hash(admin_password)
+        admin = Doctor(id=admin_id, name=admin_name, password=hashed_pw, role=admin_role)
+        db.add(admin)
+        db.commit()
+        print("Admin kullanıcı başarıyla eklendi!")
+    else:
+        print("Admin zaten mevcut.")
+    db.close()
+
+create_initial_admin()
+# --- GEÇİCİ ADMIN EKLEME BLOĞU SONU ---
+
+
+
+
+
+
+
+
 # Veritabanı tablolarını oluştur
 Base.metadata.create_all(bind=engine)
 
