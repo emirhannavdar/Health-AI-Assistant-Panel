@@ -5,14 +5,14 @@ from services.gemini_ai import ask_gemini
 class AIAnalyzer:
     def __init__(self):
         self.reference_ranges = {
-            "6690-2": {
+            "6690-2": { # LOINC kodu: Beyaz Kan Hücresi (WBC)
                 "display_name": "Beyaz Kan Hücresi (WBC)",
                 "unit": "10*9/L",
                 "normal_min": 4.0,
                 "normal_max": 10.0,
-                "high_threshold_alert": 11.0
+                "high_threshold_alert": 11.0 # Kritik yüksek eşik
             },
-            "718-7": {
+            "718-7": {  # Hemoglobin
                 "display_name": "Hemoglobin",
                 "unit": "g/dL",
                 "normal_min": 12.0,
@@ -50,7 +50,7 @@ class AIAnalyzer:
             return None
 
     def get_reference_range(self, loinc_code):
-        url = f"http://127.0.0.1:8001/reference-range?loinc={loinc_code}"
+        url = f"https://health-ai-assistant-panel.onrender.com/reference-range?loinc={loinc_code}"
         try:
             response = requests.get(url, timeout=3)
             if response.status_code == 200:
@@ -74,7 +74,7 @@ class AIAnalyzer:
             if not ref_info:
                 loinc_info = self.get_loinc_info(loinc_code)
                 if loinc_info:
-                    print("loincten çekilen bilgi: " ,{loinc_code})
+                    print(f"LOINC API'den çekilen bilgi: {loinc_info}")
                 return None
 
         def normalize_unit(u):
