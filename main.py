@@ -24,7 +24,7 @@ from fhir.resources.reference import Reference
 # from fhir.resources.codeableconcept import CodeableConcept
 # from fhir.resources.quantity import Quantity
 
-from models.base import Base, engine, get_db
+from models.base import Base, engine, get_db, SessionLocal
 from models.patient import Patient  # DB modelini Patient olarak import ediyoruz
 from models.lab_result import LabResult  #
 from services.db_service import DBService  #
@@ -32,39 +32,6 @@ from services.ai_analyzer import AIAnalyzer  #
 from datetime import datetime
 from services.gemini_ai import ask_gemini
 from models.doctor import Doctor
-
-
-from models.base import SessionLocal
-from models.doctor import Doctor
-from passlib.hash import bcrypt
-
-
-# --- burdan ---
-def create_initial_admin():
-    db = SessionLocal()
-    admin_id = "admin"
-    admin_name = "Admin"
-    admin_password = "admin123"  # Sonra değiştir!
-    admin_role = "admin"
-    if not db.query(Doctor).filter_by(id=admin_id).first():
-        hashed_pw = bcrypt.hash(admin_password)
-        admin = Doctor(id=admin_id, name=admin_name, password=hashed_pw, role=admin_role)
-        db.add(admin)
-        db.commit()
-        print("Admin kullanıcı başarıyla eklendi!")
-    else:
-        print("Admin zaten mevcut.")
-    db.close()
-
-create_initial_admin()
-# --- GEÇİCİ ADMIN EKLEME BLOĞU SONU ---
-
-
-
-
-
-
-
 
 # Veritabanı tablolarını oluştur
 Base.metadata.create_all(bind=engine)
@@ -654,6 +621,33 @@ async def doctor_my_patients_results(
             "doctor_id": r.doctor_id
         } for r in results
     ]
+
+# --- GEÇİCİ ADMIN EKLEME BLOĞU BAŞLANGIÇ ---
+def create_initial_admin():
+    db = SessionLocal()
+    admin_id = "admin"
+    admin_username = "admin"
+    admin_name = "Admin"
+    admin_password = "admin123"  # Sonra değiştir!
+    admin_role = "1"  # Admin için '1'
+    if not db.query(Doctor).filter_by(username=admin_username).first():
+        hashed_pw = bcrypt.hash(admin_password)
+        admin = Doctor(
+            id=admin_id,
+            username=admin_username,
+            password_hash=hashed_pw,
+            name=admin_name,
+            is_admin=admin_role
+        )
+        db.add(admin)
+        db.commit()
+        print("Admin kullanıcı başarıyla eklendi!")
+    else:
+        print("Admin zaten mevcut.")
+    db.close()
+
+create_initial_admin()
+# --- GEÇİCİ ADMIN EKLEME BLOĞU SONU ---
 
 if __name__ == "__main__":
     import uvicorn
