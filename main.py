@@ -627,14 +627,14 @@ async def doctor_my_patients_results(
 async def reference_range(loinc: str = Query(...)):
     with open("reference_api/reference_data.json", encoding="utf-8") as f:
         data = json.load(f)
-    for item in data:
-        if item["loinc"] == loinc:
-            return {
-                "loinc": item["loinc"],
-                "unit": item["unit"],
-                "normal_min": item["normal_min"],
-                "normal_max": item["normal_max"]
-            }
+    if loinc in data:
+        item = data[loinc]
+        return {
+            "loinc": loinc,
+            "unit": item["unit"],
+            "normal_min": item["normal_min"],
+            "normal_max": item["normal_max"]
+        }
     return {"error": "LOINC bulunamadı"}
 
 # --- GEÇİCİ ADMIN EKLEME BLOĞU BAŞLANGIÇ ---
