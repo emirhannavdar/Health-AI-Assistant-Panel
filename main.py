@@ -621,3 +621,7 @@ async def doctor_my_patients_results(
             "doctor_id": r.doctor_id
         } for r in results
     ]
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run("main:app", host="0.0.0.0", port=int(os.environ.get("PORT", 8000)), reload=False)
