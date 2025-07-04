@@ -15,6 +15,7 @@ import pytesseract
 from PIL import Image
 from jose import jwt
 from passlib.hash import bcrypt
+import json
 
 # fhir.resources kütüphanesinden import ediyoruz
 from fhir.resources.observation import Observation
@@ -621,6 +622,20 @@ async def doctor_my_patients_results(
             "doctor_id": r.doctor_id
         } for r in results
     ]
+
+@app.get("/reference-range")
+async def reference_range(loinc: str = Query(...)):
+    with open("reference_api/reference_data.json", encoding="utf-8") as f:
+        data = json.load(f)
+    for item in data:
+        if item["loinc"] == loinc:
+            return {
+                "loinc": item["loinc"],
+                "unit": item["unit"],
+                "normal_min": item["normal_min"],
+                "normal_max": item["normal_max"]
+            }
+    return {"error": "LOINC bulunamadı"}
 
 # --- GEÇİCİ ADMIN EKLEME BLOĞU BAŞLANGIÇ ---
 def create_initial_admin():
