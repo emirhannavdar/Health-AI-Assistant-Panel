@@ -3,7 +3,7 @@ fastapi
 uvicorn
 pydantic
 #python-hl7 # HL7 v2 için (şimdilik kalsın, belki ihtiyacımız olur)
-#fhir.resources
+fhir.resources
 psycopg2-binary
 SQLAlchemy
 jinja2 # Yeni eklendi
@@ -16,3 +16,4 @@ passlib[bcrypt]
 PyPDF2
 pytesseract
 Pillow
+
