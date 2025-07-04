@@ -13,3 +13,6 @@ google-generativeai
 python-dotenv
 python-jose
 passlib[bcrypt]
+PyPDF2
+pytesseract
+Pillow
