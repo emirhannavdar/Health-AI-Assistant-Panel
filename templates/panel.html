@@ -20,12 +20,31 @@
         .table {
            --bs-body-bg : auto !important;
         }
+        @media (max-width: 767.98px) {
+            .main-content {
+                padding: 1rem !important;
+            }
+            .sidebar {
+                display: none !important;
+            }
+            .result-table th, .result-table td {
+                font-size: 0.95rem;
+                padding: 0.4rem;
+            }
+            h3, .h3 {
+                font-size: 1.2rem;
+            }
+        }
+        .table-responsive {
+            overflow-x: auto;
+        }
     </style>
 </head>
 <body>
 <div class="container-fluid">
     <div class="row">
-        <nav class="col-md-2 d-none d-md-block sidebar p-0">
+        <!-- Sidebar: Use offcanvas for mobile -->
+        <nav class="col-md-2 d-none d-md-block sidebar p-0 d-none d-md-block">
             <div class="position-sticky pt-4">
                 <ul class="nav flex-column">
                     <li class="nav-item">
@@ -52,9 +71,46 @@
                 </ul>
             </div>
         </nav>
-        <main class="col-md-10 ms-sm-auto main-content">
+        <!-- Offcanvas sidebar for mobile -->
+        <div class="d-md-none">
+            <button class="btn btn-primary m-2" type="button" data-bs-toggle="offcanvas" data-bs-target="#mobileSidebar" aria-controls="mobileSidebar">
+                Menü
+            </button>
+            <div class="offcanvas offcanvas-start" tabindex="-1" id="mobileSidebar" aria-labelledby="mobileSidebarLabel">
+                <div class="offcanvas-header">
+                    <h5 class="offcanvas-title" id="mobileSidebarLabel">Menü</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Kapat"></button>
+                </div>
+                <div class="offcanvas-body">
+                    <ul class="nav flex-column">
+                        <li class="nav-item">
+                            <a class="nav-link active" id="menu-lab-mobile" href="#">Laboratuvar Sonucu Gir</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" id="menu-patient-mobile" href="#">Hasta Sonuçlarını Görüntüle</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" id="menu-aiqa-mobile" href="#">AI'ya Soru Sor</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" id="menu-reportupload-mobile" href="#">Rapor Yükle ve Açıkla</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" id="menu-symptom-mobile" href="#">Semptom Analizi</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" id="menu-clinical-mobile" href="#">Klinik Karar Desteği</a>
+                        </li>
+                        <li class="nav-item" id="menu-admin-li-mobile" style="display:none;">
+                            <a class="nav-link" id="menu-admin-mobile" href="#">Admin Paneli</a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <main class="col-12 col-md-10 ms-sm-auto main-content">
             <!-- Sağ üst köşe butonları -->
-            <div style="position:fixed; top:10px; right:20px; z-index:11000;">
+            <div class="d-flex justify-content-end align-items-center mb-3" style="position:relative; z-index:11000;">
                 <button id="btnLoginSwitch" class="btn btn-outline-primary btn-sm me-2">Giriş Yap</button>
                 <button id="btnLogout" class="btn btn-outline-danger btn-sm">Çıkış Yap</button>
             </div>
@@ -245,6 +301,7 @@
     <div class="modal-content">
       <div class="modal-header">
         <h5 class="modal-title">Doktor Girişi</h5>
+        <button type="button" class="btn-close" id="doctorLoginCloseBtn" aria-label="Kapat" style="position:absolute; right:16px; top:16px;"></button>
       </div>
       <div class="modal-body">
         <input type="text" class="form-control mb-2" id="doctorUsername" placeholder="Kullanıcı Adı">
@@ -274,6 +331,24 @@
     </div>
   </div>
 </div>
+<!-- Şifre sıfırlama modalı -->
+<div class="modal" tabindex="-1" id="resetPasswordModal" style="display:none; background:rgba(0,0,0,0.3); position:fixed; top:0; left:0; width:100vw; height:100vh; z-index:12000;">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Şifre Sıfırla</h5>
+      </div>
+      <div class="modal-body">
+        <input type="password" class="form-control mb-2" id="resetPasswordInput" placeholder="Yeni Şifre">
+        <div id="resetPasswordError" class="text-danger mb-2" style="display:none;"></div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" id="resetPasswordCancelBtn">Vazgeç</button>
+        <button type="button" class="btn btn-primary" id="resetPasswordConfirmBtn">Sıfırla</button>
+      </div>
+    </div>
+  </div>
+</div>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <script>
 window.addEventListener('DOMContentLoaded', function() {
@@ -294,38 +369,47 @@ window.addEventListener('DOMContentLoaded', function() {
     const contentClinical = document.getElementById('content-clinical');
     const contentAdmin = document.getElementById('content-admin');
 
-    // Menü geçişleri (role ve login kontrolüyle)
-    menuLab.addEventListener('click', function(e) {
-        e.preventDefault();
-        if (getRole() !== 'doctor' || !isDoctorLoggedIn()) return;
-        setActiveMenu('lab');
-    });
-    menuPatient.addEventListener('click', function(e) {
-        e.preventDefault();
-        setActiveMenu('patient');
-    });
-    menuAiqa.addEventListener('click', function(e) {
-        e.preventDefault();
-        setActiveMenu('aiqa');
-    });
-    menuReportupload.addEventListener('click', function(e) {
-        e.preventDefault();
-        setActiveMenu('reportupload');
-    });
-    menuSymptom.addEventListener('click', function(e) {
-        e.preventDefault();
-        setActiveMenu('symptom');
-    });
-    menuClinical.addEventListener('click', function(e) {
-        e.preventDefault();
-        setActiveMenu('clinical');
-    });
-    menuAdmin.addEventListener('click', function(e) {
-        e.preventDefault();
-        setActiveMenu('admin');
-    });
+    // Tüm menü ve içerik elementlerini diziye al
+    const menuItems = [menuLab, menuPatient, menuAiqa, menuReportupload, menuSymptom, menuClinical, menuAdmin];
+    const contentItems = [contentLab, contentPatient, contentAiqa, contentReportupload, contentSymptom, contentClinical, contentAdmin];
+    const menuLis = [
+        document.getElementById('menu-lab')?.parentNode,
+        document.getElementById('menu-patient')?.parentNode,
+        document.getElementById('menu-aiqa')?.parentNode,
+        document.getElementById('menu-reportupload')?.parentNode,
+        document.getElementById('menu-symptom')?.parentNode,
+        document.getElementById('menu-clinical')?.parentNode,
+        menuAdminLi
+    ];
 
     function setActiveMenu(menu) {
+        const role = getRole();
+        const isAdmin = localStorage.getItem('is_admin') === '1';
+        // Eğer admin ise sadece admin paneli aktif olsun
+        if (role === 'doctor' && isAdmin) {
+            menuLis.forEach((li, idx) => {
+                if (li) li.style.display = (idx === 6) ? '' : 'none';
+            });
+            contentItems.forEach((c, idx) => {
+                c.style.display = (idx === 6) ? '' : 'none';
+            });
+            menuAdmin.classList.add('active');
+            return;
+        }
+        // Admin olmayan doktor veya hasta için tüm menüleri ve içerikleri görünür yap
+        menuLis.forEach((li, idx) => {
+            if (li) {
+                // Sadece admin paneli menüsü admin değilse gizli
+                if (idx === 6) {
+                    li.style.display = (role === 'doctor' && isAdmin) ? '' : 'none';
+                } else {
+                    li.style.display = '';
+                }
+            }
+        });
+        contentItems.forEach((c, idx) => {
+            c.style.display = 'none';
+        });
         // Tüm menüleri ve içerikleri pasifleştir
         menuLab.classList.remove('active');
         menuPatient.classList.remove('active');
@@ -333,14 +417,7 @@ window.addEventListener('DOMContentLoaded', function() {
         menuReportupload.classList.remove('active');
         menuSymptom.classList.remove('active');
         menuClinical.classList.remove('active');
-        menuAdminLi.style.display = 'none';
-        contentLab.style.display = 'none';
-        contentPatient.style.display = 'none';
-        contentAiqa.style.display = 'none';
-        contentReportupload.style.display = 'none';
-        contentSymptom.style.display = 'none';
-        contentClinical.style.display = 'none';
-        contentAdmin.style.display = 'none';
+        menuAdminLi.style.display = (role === 'doctor' && isAdmin) ? '' : 'none';
         // Seçili menü ve içeriği aktif et
         if(menu === 'lab') {
             menuLab.classList.add('active');
@@ -394,6 +471,31 @@ window.addEventListener('DOMContentLoaded', function() {
     function updateRoleUI() {
         const role = getRole();
         const isAdmin = localStorage.getItem('is_admin') === '1';
+        // Eğer admin ise sadece admin paneli menüsü ve içeriği göster
+        if (role === 'doctor' && isAdmin) {
+            menuLis.forEach((li, idx) => {
+                if (li) li.style.display = (idx === 6) ? '' : 'none';
+            });
+            contentItems.forEach((c, idx) => {
+                c.style.display = (idx === 6) ? '' : 'none';
+            });
+            menuAdmin.classList.add('active');
+            return;
+        }
+        // Admin olmayan doktor veya hasta için tüm menüleri ve içerikleri görünür yap
+        menuLis.forEach((li, idx) => {
+            if (li) {
+                // Sadece admin paneli menüsü admin değilse gizli
+                if (idx === 6) {
+                    li.style.display = (role === 'doctor' && isAdmin) ? '' : 'none';
+                } else {
+                    li.style.display = '';
+                }
+            }
+        });
+        contentItems.forEach((c, idx) => {
+            c.style.display = 'none';
+        });
         if (role === 'patient') {
             document.getElementById('menu-lab').style.display = 'none';
             document.getElementById('content-lab').style.display = 'none';
@@ -634,6 +736,15 @@ window.addEventListener('DOMContentLoaded', function() {
                 }
                 html += `</tbody></table></div>`;
                 patientResults.innerHTML = html;
+                // Sorumlu doktoru göster
+                document.getElementById('doctorInfo')?.remove();
+                if (data.length > 0 && data[0].doctor_name) {
+                    const info = document.createElement('div');
+                    info.id = 'doctorInfo';
+                    info.className = 'alert alert-info mb-2';
+                    info.innerHTML = `<b>Sorumlu Doktor:</b> ${data[0].doctor_name}`;
+                    patientResults.parentNode.insertBefore(info, patientResults);
+                }
             })
             .catch(() => {
                 patientResults.innerHTML = `<div class='alert alert-danger'>Sunucu hatası!</div>`;
@@ -905,9 +1016,9 @@ window.addEventListener('DOMContentLoaded', function() {
         })
             .then(r => r.json())
             .then(data => {
-                let html = `<table class='table'><thead><tr><th>Kullanıcı Adı</th><th>Ad Soyad</th><th>Oluşturulma</th><th>Yetki</th><th></th></tr></thead><tbody>`;
+                let html = `<table class='table'><thead><tr><th>Kullanıcı Adı</th><th>Ad Soyad</th><th>Oluşturulma</th><th>Yetki</th><th></th><th></th></tr></thead><tbody>`;
                 for(const d of data) {
-                    html += `<tr><td>${d.username}</td><td>${d.name}</td><td>${new Date(d.created_at).toLocaleString('tr-TR')}</td><td>${d.is_admin === '1' ? 'Admin' : 'Doktor'}</td><td><button class='btn btn-danger btn-sm' data-id='${d.id}'>Sil</button></td></tr>`;
+                    html += `<tr><td>${d.username}</td><td>${d.name}</td><td>${new Date(d.created_at).toLocaleString('tr-TR')}</td><td>${d.is_admin === '1' ? 'Admin' : 'Doktor'}</td><td><button class='btn btn-danger btn-sm' data-id='${d.id}'>Sil</button></td><td><button class='btn btn-warning btn-sm btn-reset' data-id='${d.id}'>Şifre Sıfırla</button></td></tr>`;
                 }
                 html += `</tbody></table>`;
                 document.getElementById('adminDoctorList').innerHTML = html;
@@ -1008,6 +1119,72 @@ window.addEventListener('DOMContentLoaded', function() {
     });
     // Admin paneline ilk girildiğinde doktorları yükle
     menuAdmin.addEventListener('click', loadDoctors);
+
+    document.getElementById('doctorLoginCloseBtn').addEventListener('click', function() {
+        hideDoctorLogin();
+    });
+
+    // Şifre sıfırlama modalı
+    let doctorToReset = null;
+    document.getElementById('adminDoctorList').addEventListener('click', function(e) {
+        if(e.target && e.target.classList.contains('btn-reset')) {
+            doctorToReset = e.target.getAttribute('data-id');
+            document.getElementById('resetPasswordInput').value = '';
+            document.getElementById('resetPasswordError').style.display = 'none';
+            document.getElementById('resetPasswordModal').style.display = 'block';
+        }
+    });
+    document.getElementById('resetPasswordCancelBtn').addEventListener('click', function() {
+        document.getElementById('resetPasswordModal').style.display = 'none';
+        doctorToReset = null;
+    });
+    document.getElementById('resetPasswordConfirmBtn').addEventListener('click', function() {
+        const newPassword = document.getElementById('resetPasswordInput').value;
+        if(!newPassword) {
+            document.getElementById('resetPasswordError').innerText = 'Yeni şifre zorunlu!';
+            document.getElementById('resetPasswordError').style.display = '';
+            return;
+        }
+        fetch(`/admin/doctors/${doctorToReset}/reset_password`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer ' + (localStorage.getItem('doctor_token') || '')
+            },
+            body: JSON.stringify({new_password: newPassword})
+        })
+        .then(r => r.json())
+        .then(data => {
+            if(data.status === 'success') {
+                document.getElementById('resetPasswordModal').style.display = 'none';
+                doctorToReset = null;
+            } else {
+                document.getElementById('resetPasswordError').innerText = data.error || 'Hata';
+                document.getElementById('resetPasswordError').style.display = '';
+            }
+        });
+    });
+
+    // Menülerin mobil ve masaüstü eşleştirilmesi ve içerik gösterimi
+    ['lab','patient','aiqa','reportupload','symptom','clinical','admin'].forEach(function(menu) {
+        const desktop = document.getElementById('menu-' + menu);
+        const mobile = document.getElementById('menu-' + menu + '-mobile');
+        if (desktop && mobile) {
+            // Masaüstü menüye tıklanınca
+            desktop.addEventListener('click', function(e) {
+                e.preventDefault();
+                setActiveMenu(menu);
+            });
+            // Mobil menüye tıklanınca
+            mobile.addEventListener('click', function(e) {
+                e.preventDefault();
+                setActiveMenu(menu);
+                // Offcanvas'ı kapat
+                const offcanvas = bootstrap.Offcanvas.getInstance(document.getElementById('mobileSidebar'));
+                if (offcanvas) offcanvas.hide();
+            });
+        }
+    });
 });
 </script>
 </body>
